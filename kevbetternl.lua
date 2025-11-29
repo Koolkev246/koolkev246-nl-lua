@@ -269,7 +269,7 @@ nick.ref = {
             freestanding = ui.find("Aimbot", "Anti Aim", "Angles", "Body Yaw", "Freestanding"),
         },
 
-        fs = ui.find("Aimbot", "Anti Aim", "Angles", "Freestanding"):disabled(true),
+        -- fs = ui.find("Aimbot", "Anti Aim", "Angles", "Freestanding"):disabled(true),
         extend_angles = ui.find("Aimbot", "Anti Aim", "Angles", "Extended Angles"),
         ea_settings = {
             pitch = ui.find("Aimbot", "Anti Aim", "Angles", "Extended Angles", "Extended Pitch"),
@@ -789,10 +789,14 @@ nick.autotp = function ()
     -- Allow override via Idealtick keybind: ignore Auto Peek check when active
     local override_active = nick.items.tp.idealtick_override:get()
     if nick.ref.ragebot.autopeek:get() and not override_active then return end
+    -- if nick.ref.ragebot.autopeek:get() and override_active and entity.get_threat(true) then
+    --     rage.exploit:force_teleport()
+    --     -- print("attempt offensive `t slam")
+    -- end
     local prop = localplayer["m_fFlags"]
     -- Respect in-air toggle; otherwise require on-ground
     local on_ground = (prop == 257 or prop == 263)
-    if (inair or on_ground) and entity.get_threat(true) then rage.exploit:force_teleport() end
+    if (nick.ref.ragebot.autopeek:get() and override_active and entity.get_threat(true)) or (not on_ground) and entity.get_threat(true) then rage.exploit:force_teleport() end
 end
 nick.jumpscout_fix = function ()
     local localplayer = entity.get_local_player()
@@ -844,7 +848,7 @@ nick.defensive_aa = function ()
 
     if not nick.items.antiaim.defensive:get() then
         nick.ref.antiaim.base_settings.hidden:override()
-        nick.ref.antiaim.fs:override()
+        -- nick.ref.antiaim.fs:override()
         nick.ref.ragebot.lag_options:override()
         return
     end
@@ -917,7 +921,7 @@ nick.antiaim = function (event)
         nick.ref.antiaim.bodyyaw_settings.left:override()
         nick.ref.antiaim.bodyyaw_settings.right:override()
         nick.ref.antiaim.bodyyaw_settings.options:override()
-        nick.ref.antiaim.bodyyaw_settings.freestanding:override()
+        -- nick.ref.antiaim.bodyyaw_settings.freestanding:override()
 
         nick.ref.antiaim.extend_angles:override()
         nick.ref.antiaim.ea_settings.pitch:override()
@@ -951,7 +955,7 @@ nick.antiaim = function (event)
             nick.ref.antiaim.bodyyaw_settings.left:override(nick.aa_ui[i].bodyyaw_s.left:get())
             nick.ref.antiaim.bodyyaw_settings.right:override(nick.aa_ui[i].bodyyaw_s.right:get())
             nick.ref.antiaim.bodyyaw_settings.options:override(nick.aa_ui[i].bodyyaw_s.options:get())
-            nick.ref.antiaim.bodyyaw_settings.freestanding:override(nick.aa_ui[i].bodyyaw_s.fs:get())
+            -- nick.ref.antiaim.bodyyaw_settings.freestanding:override(nick.aa_ui[i].bodyyaw_s.fs:get())
 
             nick.ref.antiaim.extend_angles:override(nick.aa_ui[i].extend_angles:get())
             nick.ref.antiaim.ea_settings.pitch:override(nick.aa_ui[i].extend_angles_s.pitch:get())
@@ -1085,7 +1089,7 @@ nick.manual_aa = function ()
         yaw_override = nil
         base_override = nil
         offset_override = nil
-        fs_override = nil
+        -- fs_override = nil
     end
 
     if manual_aa ~= "None" then
@@ -1093,7 +1097,7 @@ nick.manual_aa = function ()
         nick.ref.antiaim.base:override(base_override)
         nick.ref.antiaim.base_settings.offset:override(offset_override)
     end
-    nick.ref.antiaim.fs:override(fs_override)
+    -- nick.ref.antiaim.fs:override(fs_override)
 end
 
 nick.air_exploit = function ()
