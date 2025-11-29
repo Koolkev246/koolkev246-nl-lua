@@ -415,7 +415,7 @@ nick.elements = {
     },
 
     defensive = {
-        pitch = nick.create_elements.antiaim.defensive:combo("Pitch", {"Zero", "Up", "Down", "Random", "Jitter", "Random Jitter", "45 deg", "45 deg up and down", "Custom"}),
+        pitch = nick.create_elements.antiaim.defensive:combo("Pitch", {"Zero", "Up", "Random Up", "Up Zero", "Down", "Random", "Jitter", "Random Jitter", "45 deg", "45 deg up and down", "Custom"}),
         pitch_custom = nick.create_elements.antiaim.defensive:slider("Pitch", -86, 86, 0),
         yaw = nick.create_elements.antiaim.defensive:combo("Yaw", {"Default", "Static", "Jitter", "Forward", "Random", "Random Side-Way", "Side-Way", "Spin"}),
         yaw_custom = nick.create_elements.antiaim.defensive:slider("Yaw", -180, 180, 0),
@@ -575,7 +575,7 @@ nick.elements = {
                         defensive = defensive_switch,
                         defensive_o = defensive_o,
                         defensive_s = {
-                            pitch = defensive_o:combo("Pitch", {"Default", "Zero", "Up", "Static", "45 deg", "45 deg up and down", "Jitter", "Random Jitter", "Random"}),
+                            pitch = defensive_o:combo("Pitch", {"Default", "Zero", "Up", "Up Random", "Up Zero", "Static", "45 deg", "45 deg up and down", "Jitter", "Random Jitter", "Random"}),
                             pitch_offset = defensive_o:slider("> Pitch", -89, 89, 0),
 
                             yaw = defensive_o:combo("Yaw", {"Default", "Static", "Backward", "Random", "Spin", "3-Way", "Random Side-Way", "Side-Way", "Jitter"}),
@@ -862,6 +862,8 @@ nick.defensive_aa = function ()
     local pitch_o = ({
         ["Zero"] = 0,
         ["Up"] = -89,
+        ["Random Up"] = flick_clock and (math.random(0, 1) == 0 and -89) or 89,
+        ["Up Zero"] = flick_clock and (math.random(0, 1) == 0 and -89) or 0,
         ["Down"] = 89,
         ["Random"] = math.random(-89, 89),
         ["Jitter"] = flick_clock and -89 or 89,
