@@ -415,9 +415,9 @@ nick.elements = {
     },
 
     defensive = {
-        pitch = nick.create_elements.antiaim.defensive:combo("Pitch", {"Zero", "Up", "Random Up", "Up Zero", "Down", "Random", "Jitter", "Random Jitter", "45 deg", "45 deg up and down", "Custom"}),
+        pitch = nick.create_elements.antiaim.defensive:combo("Pitch", {"Zero", "Up", "Flick Up", "Random Up", "Up Zero", "Down", "Random", "Jitter", "Random Jitter", "45 deg", "45 deg up and down", "Custom"}),
         pitch_custom = nick.create_elements.antiaim.defensive:slider("Pitch", -86, 86, 0),
-        yaw = nick.create_elements.antiaim.defensive:combo("Yaw", {"Default", "Static", "Jitter", "Forward", "Random", "Random Side-Way", "Side-Way", "Spin"}),
+        yaw = nick.create_elements.antiaim.defensive:combo("Yaw", {"Default", "Static", "Jitter", "Forward", "Random", "Random Side-Way", "Side-Way", "Spin", "3-Way", "Improved Spin", "Improved Random Side-Way"}),
         yaw_custom = nick.create_elements.antiaim.defensive:slider("Yaw", -180, 180, 0),
         yaw_jitter_mode = nick.create_elements.antiaim.defensive:combo("Jitter Mode", "Offset", "Center"),
         yaw_jitter = nick.create_elements.antiaim.defensive:slider("Jitter", -180, 180, 0),
@@ -575,7 +575,7 @@ nick.elements = {
                         defensive = defensive_switch,
                         defensive_o = defensive_o,
                         defensive_s = {
-                            pitch = defensive_o:combo("Pitch", {"Default", "Zero", "Up", "Up Random", "Up Zero", "Static", "45 deg", "45 deg up and down", "Jitter", "Random Jitter", "Random"}),
+                            pitch = defensive_o:combo("Pitch", {"Default", "Zero", "Up", "Flick Up", "Up Random", "Up Zero", "Static", "45 deg", "45 deg up and down", "Jitter", "Random Jitter", "Random"}),
                             pitch_offset = defensive_o:slider("> Pitch", -89, 89, 0),
 
                             yaw = defensive_o:combo("Yaw", {"Default", "Static", "Backward", "Random", "Spin", "3-Way", "Random Side-Way", "Side-Way", "Jitter"}),
@@ -843,8 +843,8 @@ nick.defensive_aa = function ()
 
     if rage.exploit:get() ~= 1 then return end
 
-    local localplayer = entity.get_local_player()
-    if not localplayer then return end
+    local lp = entity.get_local_player()
+    if not lp then return end
 
     if not nick.items.antiaim.defensive:get() then
         nick.ref.antiaim.base_settings.hidden:override()
@@ -856,13 +856,15 @@ nick.defensive_aa = function ()
     local pitch_settings = nick.elements.defensive.pitch:get()
     local yaw_settings = nick.elements.defensive.yaw:get()
     local in_air = nick.elements.defensive.inair:get()
-    local prop = localplayer["m_fFlags"]
+    local prop = lp["m_fFlags"]
     local flick_clock = (math.floor(globals.curtime * 10000) % 2) == 0
+    local defensive_3_way = { 90, 180, -90, 180, 90 }
 
     local pitch_o = ({
         ["Zero"] = 0,
         ["Up"] = -89,
-        ["Random Up"] = flick_clock and (math.random(0, 1) == 0 and -89) or 89,
+        ["Flick Up"] = flick_clock and -89,
+        ["Random Up"] = (math.random(0, 1) == 0 and -89) or 89,
         ["Up Zero"] = flick_clock and (math.random(0, 1) == 0 and -89) or 0,
         ["Down"] = 89,
         ["Random"] = math.random(-89, 89),
@@ -876,29 +878,44 @@ nick.defensive_aa = function ()
     local yaw_o = ({
         ["Static"] = -nick.elements.defensive.yaw_custom:get(),
         ["Forward"] = 180,
-        ["Jitter"] = (function()
-            local yaw_value = nick.elements.defensive.yaw_custom:get()
-            local jitter_value = nick.elements.defensive.yaw_jitter:get()
-            if nick.elements.defensive.yaw_jitter_mode:get() == "Center" then
-                return flick_clock and (yaw_value - jitter_value) or (yaw_value + jitter_value)
-            else
-                return flick_clock and yaw_value or yaw_value - jitter_value
-            end
-        end)(),
-        ["Random"] = math.random(-180, 180),
+        -- ["Jitter"] = (function()
+        --     local yaw_value = nick.elements.defensive.yaw_custom:get()
+        --     local jitter_value = nick.elements.defensive.yaw_jitter:get()
+        --     if nick.elements.defensive.yaw_jitter_mode:get() == "Center" then
+        --         return flick_clock and (yaw_value - jitter_value) or (yaw_value + jitter_value)
+        --     else
+        --         return flick_clock and yaw_value or yaw_value - jitter_value
+        --     end
+        -- end)(),
+        -- ["Random"] = math.random(-180, 180),
         ["Side-Way"] = flick_clock and 89 or -89,
         ["Random Side-Way"] = flick_clock and (math.random(0, 1) == 0 and -89) or 89,
-        ["Spin"] = (globals.tickcount * nick.elements.defensive.spin:get()) % 360 - 180
+        ["Random"] = math.normalize_yaw(utils.random_float(-180, 180)),
+        ["Spin"] = (globals.tickcount * nick.elements.defensive.spin:get()) % 360 - 180,
+        ["Improved Spin"] = -180 + (globals.tickcount % 9) * 40 + utils.random_float(-30, 30),
+        ["3-Way"] = defensive_3_way[localplayer.packets % 5 + 1] + utils.random_float(-15, 15),
+        -- ["Side-Way"] = localplayer.choking * 90 + utils.random_float(-30, 30),
+        ["Improved Random Side-Way"] = localplayer.choking * 90 + utils.random_float(-30, 30),
     })[yaw_settings] or 0
 
     nick.ref.antiaim.base_settings.hidden:override(true)
-    rage.antiaim:override_hidden_pitch(pitch_o)
-    if yaw_settings ~= "Default" then
-        rage.antiaim:override_hidden_yaw_offset(yaw_o)
-    end
-
+        rage.antiaim:override_hidden_pitch(pitch_o)
+        if yaw_settings ~= "Default" then
+            rage.antiaim:override_hidden_yaw_offset(yaw_o)
+        end
+    -- print(prop)
     if in_air and (prop == 257 or prop == 263) then
+        -- print("hi")
         nick.ref.ragebot.lag_options:override(nil)
+    -- elseif (prop == 257 or prop == 263) and nick.check_condition(lp) == "Crouching" then
+    --     pitch_o = -89
+    --     yaw_o = flick_clock and 89 or -89
+    --     rage.antiaim:override_hidden_pitch(pitch_o)
+    --     if yaw_settings ~= "Default" then
+    --         rage.antiaim:override_hidden_yaw_offset(yaw_o)
+    --     end
+    --     -- nick.ref.ragebot.lag_options:override(nil)
+    --     nick.ref.ragebot.lag_options:override("Always On")
     else
         nick.ref.ragebot.lag_options:override("Always On")
     end
@@ -1007,7 +1024,7 @@ nick.antiaim = function (event)
                     end
                 else
                     nick.ref.antiaim.base_settings.hidden:override()
-                    nick.ref.antiaim.fs:override()
+                    -- nick.ref.antiaim.fs:override()
                     nick.ref.ragebot.lag_options:override()
                 end
             end
